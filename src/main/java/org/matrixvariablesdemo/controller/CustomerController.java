@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -126,24 +127,32 @@ public class CustomerController {
 	        
 	    }
 	 
-	@RequestMapping (value = "/get-emails/{email}", method = RequestMethod.GET)
+	/*******************************************************************************************************************************
+	 * MultiValueMap is important when we want to store 0,1,2,3 or more object related to same key 
+	 * like we have done in the example given below email can store multiple emailIds 
+	 * @param matrixVars
+	 * @return ResponseEntity<List<CustomerDTO>>
+	 */
 
-	public ResponseEntity <CustomerDTO> getCustomerByEmailId (@MatrixVariable (pathVar = "email", required=true) String email){
-		
-		
-		try {
-			
-			CustomerDTO customerWithEmail = customerService.getCustomerByEmail(email);
-			return new ResponseEntity<CustomerDTO> (customerWithEmail, HttpStatus.OK);
-			
-			
-		} catch (Exception ex) {
-			   LOGGER.error(ex.getStackTrace(),ex);
-	    	   throw ex;
-		   }
-	        
-	}
-		
+	 @RequestMapping(value = "/get-emails/{email}", method = RequestMethod.GET)
+	 public ResponseEntity<List<CustomerDTO>> getCustomersByEmailIds(@MatrixVariable MultiValueMap<String, String> matrixVars) {
+	     try {
+	         List<CustomerDTO> customersWithEmails = new ArrayList<>();
+	         List<String> emails = matrixVars.get("email");
+	         if (emails != null) {
+	             for (String email : emails) {
+	                 CustomerDTO customerWithEmail = customerService.getCustomerByEmail(email);
+	                 customersWithEmails.add(customerWithEmail);
+	             }
+	         }
+	         return new ResponseEntity<>(customersWithEmails, HttpStatus.OK);
+	     } catch (Exception ex) {
+	         LOGGER.error(ex.getStackTrace(), ex);
+	         throw ex;
+	     }
+	 }
+
+	 
     
 	 
 }
